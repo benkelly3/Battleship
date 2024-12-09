@@ -175,7 +175,7 @@ def play_game():
             print("Invalid input! Enter row and column as numbers, separated by a comma.")
             continue
 
- if (row, col) in computer_powerups:
+         if (row, col) in computer_powerups:
             powerup = computer_powerups.pop((row, col))
             print(f"You found a power-up: {powerup}! {describe_powerup(powerup)}")
             computer_board[row][col] = 'P'  # Mark power-up location
