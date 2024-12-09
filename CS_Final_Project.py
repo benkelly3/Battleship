@@ -106,7 +106,7 @@ def handle_powerup(player, powerup, board, row, col, ships, fire_locations, ther
         return True, thermite_active
     elif powerup == 'Thermite':
         thermite_active = True  # Activate Thermite for the next hit
-        fire_locations.append((row, col))  # Optionally mark the location for immediate effects
+        fire_locations.append((row, col))
     elif powerup == 'UAV':
         for dr in range(-1, 2):
             for dc in range(-1, 2):
@@ -191,7 +191,7 @@ def play_game():
             if thermite_active:
                 fire_locations.append((row, col))
                 print("Thermite activated! This ship will be destroyed in 3 turns.")
-                thermite_active = False  # Reset the flag after using Thermite
+                thermite_active = False  # Reset the thermite flag
         else:
             print("You missed!")
             computer_board[row][col] = 'O'
