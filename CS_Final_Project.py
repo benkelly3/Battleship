@@ -227,5 +227,4 @@ def play_game():
         check_fire(fire_locations, player_board, [])
         check_fire(fire_locations, computer_board, [])
 
-if __name__ == "__main__":
-    play_game()
+play_game()
