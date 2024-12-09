@@ -1,72 +1,153 @@
 # Authors: Ben Kelly, Aidan Reekie-Mell
 # Emails: benkelly@umass.edu, areekiemell@umass.edu
 # Spire IDs: 34825996, 34619547
-# ༄ 
 
 import random
 
-def print_board(player_board,enemy_board):
-    print("  A B C D E F G H I J")
-    print("  ↓-↓-↓-↓-↓-↓-↓-↓-↓-↓")
-    row_number = 1
-    for row in board:
-        print("%d|%s" % (row_number,"|".join(row)))
-        row_number += 1
+BOARD_SIZE = 10
+SHIP_SIZES = [5, 4, 3, 3, 2]
 
-def game_rules():
-    print("Hi! Welcome to Battleship. \n Let's explain the rules before we start the game. You will place 5 ships: one is 5 units long, one is 4 units long, two are 3 units long, and one is 2 units long. \n Once you place them, you'll pick coordinates on your opponent's grid to try to sink all of their ships. If they sink all of yours, you lose.\n There are some power-ups to be found, but we'll explain those if you find them. Good luck and have fun!")
+def create_board():
+    board = []
+    for row in range(BOARD_SIZE):
+        board.append(['~'] * BOARD_SIZE)
+    return board
 
-class Battleship:
-    def __init__(self, name, length, orientation, start_position):
-        """name: name of the ship
-           length: length of the ship
-           orientation: orientation of the ship
-           start_position: starting position of the ship on the grid"""
-        self.name = name
-        self.length = length
-        self.orientation = orientation
-        self.start_position = start_position
+def print_board(board):
+    print("    " + " ".join(str(i) for i in range(1, BOARD_SIZE + 1)))
+    print("   +" + "---" * BOARD_SIZE + "+")
+    for row_num in range(1, BOARD_SIZE + 1):
+        print(f"{row_num:2} | {' '.join(board[row_num - 1])} |")
+    print("   +" + "---" * BOARD_SIZE + "+")
 
-        self.positions = calculate_positions():
-    def calculate_positions(self):
-        positions = []
-        row, col = self.start_position
+def is_valid_placement(board, row, col, ship_length, orientation):
+    if orientation == "horizontal":
+        if col + ship_length > BOARD_SIZE:
+            return False
+        for i in range(ship_length):
+            if board[row][col + i] != '~':
+                return False
+    elif orientation == "vertical":
+        if row + ship_length > BOARD_SIZE:
+            return False
+        for i in range(ship_length):
+            if board[row + i][col] != '~':
+                return False
+    return True
 
+def place_player_ships(board):
+    ships = []
+    for ship_length in SHIP_SIZES:
+        while True:
+            print(f"Place your ship of length {ship_length}.")
+            print_board(board)
+            try:
+                row, col, orientation = input(f"Enter the starting position and orientation (row,col,orientation) for the {ship_length}-long ship: ").split(",")
+                row, col = int(row) - 1, int(col) - 1
+                orientation = orientation.strip().lower()
+                
+                if orientation not in ["horizontal", "vertical"]:
+                    print("Invalid orientation. Use 'horizontal' or 'vertical'.")
+                    continue
+                
+                if is_valid_placement(board, row, col, ship_length, orientation):
+                    if orientation == "horizontal":
+                        for i in range(ship_length):
+                            board[row][col + i] = 'S'
+                    elif orientation == "vertical":
+                        for i in range(ship_length):
+                            board[row + i][col] = 'S'
+                    ships.append((row, col, ship_length, orientation))
+                    break
+                else:
+                    print("Invalid placement. Try again.")
+            except ValueError:
+                print("Invalid input format. Please enter the starting position and orientation in the format (row,col,orientation).")
+    return ships
 
+def place_computer_ships(board):
+    ships = []
+    for ship_length in SHIP_SIZES:
+        while True:
+            row = random.randint(0, BOARD_SIZE - 1)
+            col = random.randint(0, BOARD_SIZE - 1)
+            orientation = random.choice(["horizontal", "vertical"])
 
-def create_enemy_ships(enemy_board):
-    # create 5 ships for the user to place
+            if is_valid_placement(board, row, col, ship_length, orientation):
+                if orientation == "horizontal":
+                    for i in range(ship_length):
+                        board[row][col + i] = 'S'
+                elif orientation == "vertical":
+                    for i in range(ship_length):
+                        board[row + i][col] = 'S'
+                ships.append((row, col, ship_length, orientation))
+                break
+    return ships
 
-def create_player_ships(board):
+def get_player_guess():
+    while True:
+        guess = input("Enter your guess (row,col): ")
+        try:
+            row, col = guess.split(",")
+            row = int(row) - 1
+            col = int(col) - 1
+            if 0 <= row < BOARD_SIZE and 0 <= col < BOARD_SIZE:
+                return row, col
+            else:
+                print("Out of bounds! Try again.")
+        except ValueError:
+            print("Invalid input! Please enter two integers (row,col).")
 
-def rotate_ship(board):
+def get_computer_guess():
+    row = random.randint(0, BOARD_SIZE - 1)
+    col = random.randint(0, BOARD_SIZE - 1)
+    return row, col
 
-def shoot_yo_shot(enemy_board):
-    # pick a coordinate to shoot at
+def play_game():
+    player_board = create_board()
+    computer_board = create_board()
 
-def generate_powerups(enemy_board):
-    # pick 3 random unoccupied spots on the board to place powerups
+    print("Place your ships on the board.")
+    player_ships = place_player_ships(player_board)
 
-sunk_ships = 0
+    print("\nThe computer is placing its ships.")
+    computer_ships = place_computer_ships(computer_board)
 
-all_sunk = sunk_ships == 5
+    while True:
+        print("\nYour board:")
+        print_board(player_board)
+        print("\nYour guesses:")
+        hidden_board = [['~' if cell == '~' else 'X' for cell in row] for row in computer_board]
+        print_board(hidden_board)
 
-powerup_inv = 0
+        row, col = get_player_guess()
 
-have_powerup = powerup_inv == 1
+        if (row, col) in computer_ships:
+            print("You hit a ship!")
+            computer_ships.remove((row, col))
+            player_board[row][col] = 'X'
+        else:
+            print("You missed!")
+            player_board[row][col] = 'O'
 
-def one_turn(enemy_board):
-    shoot_yo_shot(enemy_board)
+        if len(computer_ships) == 0:
+            print("\nCongratulations! You sank all the computer's ships!")
+            break
 
-def choose_powerup(power):
-    elements = ['Extra_turns','Thermite','Reinforcements','Spy_drone']
-    weights = [.5,.2,.2,.1]
-    chosen_element = random.choices(elements,weights)[0]
-    return chosen_element
+        print("\nComputer's turn!")
+        row, col = get_computer_guess()
 
-def begin_game(board,enemy_board):
-    n = input("Have you played Battleship before?")
-    if n != ('Yes', 'yes', 'yeah', 'Yeah', 'Yup', 'yup', 'Ye', 'ye', 'Yep', 'yep', 'Yurr', 'yurr'):
-        game_rules()
-    print_board()
+        if (row, col) in player_ships:
+            print(f"Computer hit your ship at ({row + 1},{col + 1})!")
+            player_ships.remove((row, col))
+            computer_board[row][col] = 'X'
+        else:
+            print(f"Computer missed at ({row + 1},{col + 1}).")
+            computer_board[row][col] = 'O'
 
+        if len(player_ships) == 0:
+            print("\nThe computer sank all your ships! You lose!")
+            break
+
+if __name__ == "__main__":
+    play_game()
