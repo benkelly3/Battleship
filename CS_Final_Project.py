@@ -1,16 +1,16 @@
 import random
 
-BOARD_SIZE = 10
+BOARD_SIZE = 10 # 10x10 grid
 SHIP_SIZES = [5, 4, 3, 3, 2]
 POWERUP_WEIGHTS = (0.5, 0.2, 0.2, 0.1) # probabilities for powerups
 
-def create_board():
+def create_board(): # creates the 10x10 board
     board = []
     for row in range(BOARD_SIZE):
         board.append(['~'] * BOARD_SIZE)
     return board
 
-def print_board(board):
+def print_board(board): # prints the gameboard with header and footer
     print("    " + " ".join(str(i) for i in range(1, BOARD_SIZE + 1)))
     print("   +" + "---" * BOARD_SIZE + "+")
     for row_num in range(1, BOARD_SIZE + 1):
@@ -50,7 +50,7 @@ def place_ships(board, ship_sizes): # Places CPU ships
 def place_player_ships(board, ship_sizes): # Placing player ships
     for ship_length in ship_sizes:
         while True:
-            print_board(board)
+            print_board(board) # updates the board after each ship is placed
             print(f"Place your ship of length {ship_length}.")
             try:
                 row, col, orientation = input("Enter starting position and orientation (row,col,orientation): ").split(",")
@@ -74,24 +74,24 @@ def place_player_ships(board, ship_sizes): # Placing player ships
             except ValueError:
                 print("Invalid input. Use the format (row,col,orientation).")
 
-def generate_powerups(board, num_powerups=3, weights=POWERUP_WEIGHTS):
+def generate_powerups(board, num_powerups=3, weights=POWERUP_WEIGHTS): # function for creating and placing powerups
     powerups = ['Extra Turn', 'Thermite', 'UAV', 'Extra Ship']
     total_weights = sum(weights)
     normalized_weights = [w / total_weights for w in weights]
     board_positions = [(r, c) for r in range(BOARD_SIZE) for c in range(BOARD_SIZE)]
     random.shuffle(board_positions)
 
-    powerup_positions = {}
-    for _ in range(num_powerups):
-        if not board_positions:
+    powerup_positions = {} 
+    for i in range(num_powerups):
+        if not board_positions: # Cannot place a powerup outside the board
             break
         position = board_positions.pop()
         powerup = random.choices(powerups, weights=normalized_weights)[0]
-        powerup_positions[position] = powerup
+        powerup_positions[position] = powerup # Places a powerup at a random position from a list of available board positions
 
     return powerup_positions
 
-def describe_powerup(powerup):
+def describe_powerup(powerup): # Text printed after a powerup is obtained
     descriptions = {
         'Extra Turn': "Attack twice on your next turn.",
         'Thermite': "On hit, destroy the target ship after 3 turns.",
@@ -124,6 +124,18 @@ def check_fire(fire_locations, board, ships):
                 board[r][c] = 'X'
             ships.remove(ship)
 
+def reveal_powerups(player_powerups, computer_powerups):
+    print("\n--- Debug: Power-Up Locations ---")
+    print("Player Power-Ups:")
+    for position, powerup in player_powerups.items():
+        print(f"  {powerup} at {position[0] + 1},{position[1] + 1}")
+
+    print("Computer Power-Ups:")
+    for position, powerup in computer_powerups.items():
+        print(f"  {powerup} at {position[0] + 1},{position[1] + 1}")
+    print("---------------------------------")
+
+
 def play_game():
     player_board = create_board()
     computer_board = create_board()
@@ -141,7 +153,7 @@ def play_game():
     fire_locations = []
     player_extra_turn = False
     computer_extra_turn = False
-    target_queue = []  # list of attacks for computer to make after hitting a ship successfully
+    target_queue = []
 
     while True:
         print("\nYour board:")
@@ -150,9 +162,19 @@ def play_game():
         print_board([['~' if cell == 'S' else cell for cell in row] for row in computer_board])
 
         # Player's turn
-        print("\nYour turn!")
-        row, col = map(int, input("Enter your guess (row,col): ").split(","))
-        row, col = row - 1, col - 1
+        print("\nYour turn! (Type 'debug' to reveal power-ups)")
+        guess = input("Enter your guess (row,col): ")
+
+        if guess.lower() == "debug":
+            reveal_powerups(player_powerups, computer_powerups)
+            continue
+
+        try:
+            row, col = map(int, guess.split(","))
+            row, col = row - 1, col - 1
+        except ValueError:
+            print("Invalid input! Enter row and column as numbers, separated by a comma.")
+            continue
 
         if (row, col) in computer_powerups:
             powerup = computer_powerups.pop((row, col))
@@ -169,27 +191,22 @@ def play_game():
             print("Congratulations! You sank all the computer's ships!")
             break
 
-        # Computer's turn
         if not player_extra_turn:
             print("\nComputer's turn!")
 
             if target_queue:
-                # Use a queued target
                 row, col = target_queue.pop(0)
             else:
-                # Random guess
                 row, col = random.randint(0, BOARD_SIZE - 1), random.randint(0, BOARD_SIZE - 1)
 
             if player_board[row][col] == 'S':
                 print(f"Computer hit your ship at ({row + 1},{col + 1})!")
                 player_board[row][col] = 'X'
 
-                # Add adjacent squares to the queue
                 for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     nr, nc = row + dr, col + dc
                     if 0 <= nr < BOARD_SIZE and 0 <= nc < BOARD_SIZE and player_board[nr][nc] == '~':
                         target_queue.append((nr, nc))
-
             else:
                 print(f"Computer missed at ({row + 1},{col + 1}).")
                 player_board[row][col] = 'O'
@@ -198,10 +215,8 @@ def play_game():
                 print("The computer sank all your ships. You lose!")
                 break
 
-        # Process fire effects
         check_fire(fire_locations, player_board, [])
         check_fire(fire_locations, computer_board, [])
-
 
 if __name__ == "__main__":
     play_game()
