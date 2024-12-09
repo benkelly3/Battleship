@@ -184,18 +184,17 @@ def play_game():
             continue  # Skip to the next turn
      
         if computer_board[row][col] == 'S':
-    print("You hit a ship!")
-    computer_board[row][col] = 'X'
+            print("You hit a ship!")
+            computer_board[row][col] = 'X'
     
     # Check for Thermite activation
-    if thermite_active:
-        # Mark the ship as burning (optionally with a specific character like 'F')
-        fire_locations.append((row, col))
-        print("Thermite activated! This ship will be destroyed in 3 turns.")
-        thermite_active = False  # Reset the flag after using Thermite
-else:
-    print("You missed!")
-    computer_board[row][col] = 'O'
+            if thermite_active:
+                fire_locations.append((row, col))
+                print("Thermite activated! This ship will be destroyed in 3 turns.")
+                thermite_active = False  # Reset the flag after using Thermite
+        else:
+            print("You missed!")
+            computer_board[row][col] = 'O'
 
         if not any('S' in row for row in computer_board):
             print("Congratulations! You sank all the computer's ships!")
