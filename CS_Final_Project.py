@@ -128,13 +128,12 @@ def reveal_powerups(player_powerups, computer_powerups):
     print("\n--- Debug: Power-Up Locations ---")
     print("Player Power-Ups:")
     for position, powerup in player_powerups.items():
-        print(f"  {powerup} at {position[0] + 1},{position[1] + 1}")
+        print(f"  {powerup} at {position[0] + 1},{position[1] + 1} (P)")
 
     print("Computer Power-Ups:")
     for position, powerup in computer_powerups.items():
-        print(f"  {powerup} at {position[0] + 1},{position[1] + 1}")
+        print(f"  {powerup} at {position[0] + 1},{position[1] + 1} (P)")
     print("---------------------------------")
-
 
 def play_game():
     player_board = create_board()
@@ -176,10 +175,13 @@ def play_game():
             print("Invalid input! Enter row and column as numbers, separated by a comma.")
             continue
 
-        if (row, col) in computer_powerups:
+ if (row, col) in computer_powerups:
             powerup = computer_powerups.pop((row, col))
+            print(f"You found a power-up: {powerup}! {describe_powerup(powerup)}")
+            computer_board[row][col] = 'P'  # Mark power-up location
             player_extra_turn = handle_powerup("Player", powerup, computer_board, row, col, [], fire_locations)
-
+            continue  # Skip to the next turn
+     
         if computer_board[row][col] == 'S':
             print("You hit a ship!")
             computer_board[row][col] = 'X'
