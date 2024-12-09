@@ -2,7 +2,7 @@ import random
 
 BOARD_SIZE = 10
 SHIP_SIZES = [5, 4, 3, 3, 2]
-POWERUP_WEIGHTS = (0.5, 0.2, 0.2, 0.1)
+POWERUP_WEIGHTS = (0.5, 0.2, 0.2, 0.1) # probabilities for powerups
 
 def create_board():
     board = []
@@ -17,7 +17,7 @@ def print_board(board):
         print(f"{row_num:2} | {' '.join(board[row_num - 1])} |")
     print("   +" + "---" * BOARD_SIZE + "+")
 
-def is_valid_placement(board, row, col, ship_length, orientation):
+def is_valid_placement(board, row, col, ship_length, orientation): # logic for placing ships on the board
     if orientation == "horizontal":
         if col + ship_length > BOARD_SIZE:
             return False
@@ -32,7 +32,7 @@ def is_valid_placement(board, row, col, ship_length, orientation):
                 return False
     return True
 
-def place_ships(board, ship_sizes):
+def place_ships(board, ship_sizes): # Places CPU ships
     for ship_length in ship_sizes:
         while True:
             row = random.randint(0, BOARD_SIZE - 1)
@@ -47,7 +47,7 @@ def place_ships(board, ship_sizes):
                         board[row + i][col] = 'S'
                 break
 
-def place_player_ships(board, ship_sizes):
+def place_player_ships(board, ship_sizes): # Placing player ships
     for ship_length in ship_sizes:
         while True:
             print_board(board)
@@ -141,6 +141,7 @@ def play_game():
     fire_locations = []
     player_extra_turn = False
     computer_extra_turn = False
+    target_queue = []  # list of attacks for computer to make after hitting a ship successfully
 
     while True:
         print("\nYour board:")
@@ -168,17 +169,27 @@ def play_game():
             print("Congratulations! You sank all the computer's ships!")
             break
 
+        # Computer's turn
         if not player_extra_turn:
             print("\nComputer's turn!")
-            row, col = random.randint(0, BOARD_SIZE - 1), random.randint(0, BOARD_SIZE - 1)
 
-            if (row, col) in player_powerups:
-                powerup = player_powerups.pop((row, col))
-                computer_extra_turn = handle_powerup("Computer", powerup, player_board, row, col, [], fire_locations)
+            if target_queue:
+                # Use a queued target
+                row, col = target_queue.pop(0)
+            else:
+                # Random guess
+                row, col = random.randint(0, BOARD_SIZE - 1), random.randint(0, BOARD_SIZE - 1)
 
             if player_board[row][col] == 'S':
                 print(f"Computer hit your ship at ({row + 1},{col + 1})!")
                 player_board[row][col] = 'X'
+
+                # Add adjacent squares to the queue
+                for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    nr, nc = row + dr, col + dc
+                    if 0 <= nr < BOARD_SIZE and 0 <= nc < BOARD_SIZE and player_board[nr][nc] == '~':
+                        target_queue.append((nr, nc))
+
             else:
                 print(f"Computer missed at ({row + 1},{col + 1}).")
                 player_board[row][col] = 'O'
