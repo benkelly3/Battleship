@@ -47,6 +47,33 @@ def place_ships(board, ship_sizes):
                         board[row + i][col] = 'S'
                 break
 
+def place_player_ships(board, ship_sizes):
+    for ship_length in ship_sizes:
+        while True:
+            print_board(board)
+            print(f"Place your ship of length {ship_length}.")
+            try:
+                row, col, orientation = input("Enter starting position and orientation (row,col,orientation): ").split(",")
+                row, col = int(row) - 1, int(col) - 1
+                orientation = orientation.strip().lower()
+
+                if orientation not in ["horizontal", "vertical"]:
+                    print("Invalid orientation. Use 'horizontal' or 'vertical'.")
+                    continue
+
+                if is_valid_placement(board, row, col, ship_length, orientation):
+                    if orientation == "horizontal":
+                        for i in range(ship_length):
+                            board[row][col + i] = 'S'
+                    elif orientation == "vertical":
+                        for i in range(ship_length):
+                            board[row + i][col] = 'S'
+                    break
+                else:
+                    print("Invalid placement. Try again.")
+            except ValueError:
+                print("Invalid input. Use the format (row,col,orientation).")
+
 def generate_powerups(board, num_powerups=3, weights=POWERUP_WEIGHTS):
     powerups = ['Extra Turn', 'Thermite', 'UAV', 'Extra Ship']
     total_weights = sum(weights)
@@ -101,8 +128,10 @@ def play_game():
     player_board = create_board()
     computer_board = create_board()
 
-    print("Placing ships...")
-    place_ships(player_board, SHIP_SIZES)
+    print("Place your ships on the board.")
+    place_player_ships(player_board, SHIP_SIZES)
+
+    print("\nThe computer is placing its ships...")
     place_ships(computer_board, SHIP_SIZES)
 
     print("\nGenerating powerups...")
