@@ -100,12 +100,13 @@ def describe_powerup(powerup): # Text printed after a powerup is obtained
     }
     return descriptions.get(powerup, "Unknown powerup")
 
-def handle_powerup(player, powerup, board, row, col, ships, fire_locations):
-    print(f"{player} found a powerup: {powerup}! {describe_powerup(powerup)}")
+def handle_powerup(player, powerup, board, row, col, ships, fire_locations, thermite_active):
+    print(f"{player} found a power-up: {powerup}! {describe_powerup(powerup)}")
     if powerup == 'Extra Turn':
-        return True
+        return True, thermite_active
     elif powerup == 'Thermite':
-        fire_locations.append((row, col))
+        thermite_active = True  # Activate Thermite for the next hit
+        fire_locations.append((row, col))  # Optionally mark the location for immediate effects
     elif powerup == 'UAV':
         for dr in range(-1, 2):
             for dc in range(-1, 2):
@@ -114,7 +115,7 @@ def handle_powerup(player, powerup, board, row, col, ships, fire_locations):
                     board[nr][nc] = '!'
     elif powerup == 'Extra Ship':
         place_ships(board, [3])
-    return False
+    return False, thermite_active
 
 def check_fire(fire_locations, board, ships):
     for row, col in fire_locations:
@@ -183,11 +184,18 @@ def play_game():
             continue  # Skip to the next turn
      
         if computer_board[row][col] == 'S':
-            print("You hit a ship!")
-            computer_board[row][col] = 'X'
-        else:
-            print("You missed!")
-            computer_board[row][col] = 'O'
+    print("You hit a ship!")
+    computer_board[row][col] = 'X'
+    
+    # Check for Thermite activation
+    if thermite_active:
+        # Mark the ship as burning (optionally with a specific character like 'F')
+        fire_locations.append((row, col))
+        print("Thermite activated! This ship will be destroyed in 3 turns.")
+        thermite_active = False  # Reset the flag after using Thermite
+else:
+    print("You missed!")
+    computer_board[row][col] = 'O'
 
         if not any('S' in row for row in computer_board):
             print("Congratulations! You sank all the computer's ships!")
